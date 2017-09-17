@@ -1,0 +1,12 @@
+--Q1. List	the	order	number	and	total	dollars	of	all	orders.
+SELECT ordno, totalUSD
+FROM Orders;
+
+--Q2. List	the	name	and	city	of	agents	named	Smith.	
+--Q3. List	the	id,	name,	and	price	of	products	with	quantity	more	than	200,010.	
+--Q4. List	the	names	and	cities	of	customers	in	Duluth.	
+--Q5. List	the	names	of	agents	not	in	New	York	and	not	in	Duluth.	
+--Q6. List	all	data	for	products	in	neither	Dallas	nor	Duluth	that	cost	US$1	or	more.	
+--Q7. List	all	data	for	orders	in	March	or	May.	
+--Q8. List	all	data	for	orders	in	February	of	US$500	or	more.	
+--Q9. List	all	orders	from	the	customer	whose	cid	is	C005
