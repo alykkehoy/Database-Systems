@@ -32,5 +32,9 @@ SELECT *
 FROM Orders
 WHERE month = 'Mar' or month = 'May';
 
---Q8. List	all	data	for	orders	in	February	of	US$500	or	more.	
+--Q8. List	all	data	for	orders	in	February	of	US$500	or	more.
+SELECT *
+FROM Orders
+WHERE month = 'Feb' and totalUSD >= 500;
+
 --Q9. List	all	orders	from	the	customer	whose	cid	is	C005
