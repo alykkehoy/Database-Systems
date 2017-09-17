@@ -11,7 +11,12 @@ WHERE name = 'Smith';
 SELECT pid, name, priceUSD
 FROM Products
 WHERE qty > 200010;
+
 --Q4. List	the	names	and	cities	of	customers	in	Duluth.	
+SELECT name, city
+FROM Customers
+WHERE city = 'Duluth'
+
 --Q5. List	the	names	of	agents	not	in	New	York	and	not	in	Duluth.	
 --Q6. List	all	data	for	products	in	neither	Dallas	nor	Duluth	that	cost	US$1	or	more.	
 --Q7. List	all	data	for	orders	in	March	or	May.	
