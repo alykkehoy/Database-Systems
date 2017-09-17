@@ -15,14 +15,18 @@ WHERE qty > 200010;
 --Q4. List	the	names	and	cities	of	customers	in	Duluth.	
 SELECT name, city
 FROM Customers
-WHERE city = 'Duluth'
+WHERE city = 'Duluth';
 
 --Q5. List	the	names	of	agents	not	in	New	York	and	not	in	Duluth.	
 SELECT name
 FROM Agents
 WHERE city <> 'New York' and city <> 'Duluth';
 
---Q6. List	all	data	for	products	in	neither	Dallas	nor	Duluth	that	cost	US$1	or	more.	
+--Q6. List	all	data	for	products	in	neither	Dallas	nor	Duluth	that	cost	US$1	or	more.
+SELECT *
+FROM Products
+WHERE city <> 'Dallas' and city <> 'Duluth' and priceUSD >= 1;
+
 --Q7. List	all	data	for	orders	in	March	or	May.	
 --Q8. List	all	data	for	orders	in	February	of	US$500	or	more.	
 --Q9. List	all	orders	from	the	customer	whose	cid	is	C005
