@@ -38,3 +38,6 @@ FROM Orders
 WHERE month = 'Feb' and totalUSD >= 500;
 
 --Q9. List	all	orders	from	the	customer	whose	cid	is	C005
+SELECT *
+FROM Orders
+WHERE cid = 'c005';
