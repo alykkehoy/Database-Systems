@@ -7,7 +7,10 @@ SELECT name, city
 FROM Agents
 WHERE name = 'Smith';
 
---Q3. List	the	id,	name,	and	price	of	products	with	quantity	more	than	200,010.	
+--Q3. List	the	id,	name,	and	price	of	products	with	quantity	more	than	200,010.
+SELECT pid, name, priceUSD
+FROM Products
+WHERE qty > 200010;
 --Q4. List	the	names	and	cities	of	customers	in	Duluth.	
 --Q5. List	the	names	of	agents	not	in	New	York	and	not	in	Duluth.	
 --Q6. List	all	data	for	products	in	neither	Dallas	nor	Duluth	that	cost	US$1	or	more.	
