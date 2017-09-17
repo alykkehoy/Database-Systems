@@ -27,6 +27,10 @@ SELECT *
 FROM Products
 WHERE city <> 'Dallas' and city <> 'Duluth' and priceUSD >= 1;
 
---Q7. List	all	data	for	orders	in	March	or	May.	
+--Q7. List	all	data	for	orders	in	March	or	May.
+SELECT *
+FROM Orders
+WHERE month = 'Mar' or month = 'May';
+
 --Q8. List	all	data	for	orders	in	February	of	US$500	or	more.	
 --Q9. List	all	orders	from	the	customer	whose	cid	is	C005
