@@ -34,6 +34,24 @@ WHERE cid IN (
 
 -- 6. Get	the	name,	discount,	and	city	for	all	customers	who	place	orders	through	agents	in
 -- Tokyo	or	New	York.
+SELECT name, discountpct, city
+FROM customers
+WHERE cid IN (
+  SELECT cid
+  FROM orders
+  WHERE aid IN (
+    SELECT aid
+    FROM agents
+    WHERE city = 'Tokyo' or city = 'New York'
+  )
+);
 
 -- 7. Get	all	customers	who	have	the	same	discount	as	that	of	any	customers	in	Duluth	or
 -- London
+SELECT *
+FROM customers
+WHERE discountpct IN (
+  SELECT discountpct
+  FROM customers
+  WHERE city = 'Duluth' or city = 'London'
+);
