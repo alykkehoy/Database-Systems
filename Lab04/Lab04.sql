@@ -1,3 +1,7 @@
+-- Anders Lykkehoy
+-- Lab04
+-- Database Systems
+
 -- 1. Get	the	cities	of	agents	booking	an	order	for	a	customer	whose	cid	is	'c006'.
 SELECT city
 FROM agents
@@ -82,3 +86,26 @@ WHERE discountpct IN (
 -- advantage	of	putting	that	sort	of	thing	inside	the	database?	Make	up	some	examples
 -- of	good	uses	of	check	constraints	and	some	examples	of	bad	uses	of	check	constraints.
 -- Explain	the	differences	in	your	examples	and	argue	your	case.
+
+/*
+Check constraints are requirements set on a column. An advantage of check constraints is it forces data
+to be valid. An example would be if a column is day_of_the_week, and someone tried to use the value 'today'.
+The check constraint could catch that and not allow it into the database.
+
+Good Uses:
+ - not null
+  - forces you to have a value
+ - am or pm
+  - if the database is not using military time, makes the time more precise and forces a valid choice of
+  either am or pm.
+ - month
+  - forces a valid month 1 - 12. More than likely possible values are not going to change.
+
+Bad Uses:
+  - Department
+    - a department could be added or cut causing some values to no longer be valid, or new valid values
+    to not be allowed.
+  - Project
+    - just like departments, projects can come and go making the database less accurate to the real world
+    information.
+ */
