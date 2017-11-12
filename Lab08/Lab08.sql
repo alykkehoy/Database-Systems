@@ -40,7 +40,7 @@ CREATE TABLE public.Actor(
   "eye color" TEXT,
   "height(in)" INT,
   "weight (lbs)" INT,
-  "favorit color" text,
+  "favorite color" text,
   "sag date" text
 );
 
