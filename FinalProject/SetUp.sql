@@ -13,7 +13,8 @@ DROP TABLE IF EXISTS JudgeLevel;
 DROP TABLE IF EXISTS Player;
 DROP TABLE IF EXISTS BannedPeople;
 DROP TABLE IF EXISTS Person;
-DROP TABLE IF EXISTS DeckCards;
+DROP TABLE IF EXISTS Deck;
+DROP TABLE IF EXISTS DeckList;
 DROP TABLE IF EXISTS Card;
 DROP TABLE IF EXISTS Set;
 
@@ -33,18 +34,27 @@ CREATE TABLE Set (
 CREATE TABLE Card (
     id    SERIAL,
     name  text    NOT NULL,
-    setID INTEGER NOT NULL REFERENCES Card(id),
+    setID INTEGER NOT NULL REFERENCES Set(id),
   PRIMARY KEY (id)
 );
 
 --
 -- The table of Decks.
 --
-CREATE TABLE DeckCards (
-    id        SERIAL,
-    cardID    INTEGER NOT NULL REFERENCES Card(id),
-    instances INTEGER NOT NULL DEFAULT 1,
+CREATE TABLE Deck (
+    id SERIAL,
+    name text,
   PRIMARY KEY (id)
+);
+
+--
+-- The table of cards in a deck.
+--
+CREATE TABLE DeckList (
+  id        INTEGER REFERENCES Deck(id),
+  cardID    INTEGER NOT NULL REFERENCES Card(id),
+  instances INTEGER NOT NULL DEFAULT 1,
+  PRIMARY KEY (id, cardID)
 );
 
 --
@@ -137,7 +147,7 @@ CREATE TABLE Match (
 CREATE TABLE PlaysIn (
     matchID  INTEGER NOT NULL REFERENCES Match(id),
     playerID INTEGER NOT NULL REFERENCES Player(personID),
-    deckID   INTEGER NOT NULL REFERENCES DeckCards(id),
+    deckID   INTEGER NOT NULL REFERENCES Deck(id),
     side     integer NOT NULL,
     result   text    NOT NULL,
   PRIMARY KEY (matchID, playerID)
