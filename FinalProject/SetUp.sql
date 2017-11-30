@@ -22,6 +22,7 @@ DROP TABLE IF EXISTS Set;
 
 -- drop all views
 DROP VIEW IF EXISTS fullMatchView;
+DROP VIEW IF EXISTS bannedPeopleInfo;
 
 -- drop all rolls
 DROP ROLE IF EXISTS admin;
@@ -176,6 +177,28 @@ CREATE TABLE BannedPeople (
   PRIMARY KEY (personID)
 );
 
+
+--
+-- Create view for full match info
+--
+CREATE VIEW fullMatchView AS
+SELECT match.id as match_id, PlaysIn.playerID as player_id, p1.fname as player_name, PlaysIn.side, judge.personID as judge_id, p2.fname as judge_name, result, gameType.name
+FROM Match INNER JOIN PlaysIn ON Match.id = PlaysIn.matchID
+           INNER JOIN Player ON PlaysIn.playerID = Player.personID
+           INNER JOIN Judge ON Match.judgeID = Judge.personID
+           INNER JOIN person as p1 ON Player.personID = p1.id
+           INNER JOIN person as p2 ON Judge.personID = p2.id
+           INNER JOIN gametype ON Match.gameType = GameType.id;
+
+--
+-- Create view for full info on banned people
+--
+CREATE VIEW bannedPeopleInfo AS
+SELECT personID, fname, lname, startDate, legth_months
+FROM BannedPeople INNER JOIN person ON BannedPeople.personID = Person.id;
+
+
+
 -- CREATE OR REPLACE FUNCTION check_deck_size()
 --   RETURNS TRIGGER AS
 -- $$
@@ -227,17 +250,6 @@ CREATE TRIGGER check_match_judge
   FOR EACH ROW
   EXECUTE PROCEDURE check_match_judge();
 
---
--- Create view for full match info
---
-CREATE VIEW fullMatchView AS
-SELECT match.id as match_id, PlaysIn.playerID as player_id, p1.fname as player_name, PlaysIn.side, judge.personID as judge_id, p2.fname as judge_name, result, gameType.name
-FROM Match INNER JOIN PlaysIn ON Match.id = PlaysIn.matchID
-           INNER JOIN Player ON PlaysIn.playerID = Player.personID
-           INNER JOIN Judge ON Match.judgeID = Judge.personID
-           INNER JOIN person as p1 ON Player.personID = p1.id
-           INNER JOIN person as p2 ON Judge.personID = p2.id
-           INNER JOIN gametype ON Match.gameType = GameType.id;
 
 
 
