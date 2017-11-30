@@ -1,8 +1,10 @@
 ----------------------------------------------------------------------------------------
--- Magic the Gathering
+-- Magic the Gathering:
 -- Organized Play
 -- by Anders Lykkehoy
 ----------------------------------------------------------------------------------------
+
+-- drop all tables
 DROP TABLE IF EXISTS PlaysIn;
 DROP TABLE IF EXISTS Match;
 DROP TABLE IF EXISTS GameType;
@@ -13,10 +15,19 @@ DROP TABLE IF EXISTS JudgeLevel;
 DROP TABLE IF EXISTS Player;
 DROP TABLE IF EXISTS BannedPeople;
 DROP TABLE IF EXISTS Person;
-DROP TABLE IF EXISTS Deck;
 DROP TABLE IF EXISTS DeckList;
+DROP TABLE IF EXISTS Deck;
 DROP TABLE IF EXISTS Card;
 DROP TABLE IF EXISTS Set;
+
+-- drop all views
+DROP VIEW IF EXISTS fullMatchView;
+
+-- drop all rolls
+DROP ROLE IF EXISTS admin;
+DROP ROLE IF EXISTS tournamentAdmin;
+DROP ROLE IF EXISTS judge;
+DROP ROLE IF EXISTS player;
 
 --
 -- The table of Sets.
@@ -51,9 +62,9 @@ CREATE TABLE Deck (
 -- The table of cards in a deck.
 --
 CREATE TABLE DeckList (
-  id        INTEGER REFERENCES Deck(id),
-  cardID    INTEGER NOT NULL REFERENCES Card(id),
-  instances INTEGER NOT NULL DEFAULT 1,
+    id        INTEGER REFERENCES Deck(id),
+    cardID    INTEGER NOT NULL REFERENCES Card(id),
+    instances INTEGER NOT NULL DEFAULT 1 CHECK (instances >= 1 AND instances <= 4),
   PRIMARY KEY (id, cardID)
 );
 
@@ -93,7 +104,8 @@ CREATE TABLE Tournament (
     id       SERIAL,
     name     text    NOT NULL,
     location text    NOT NULL,
-    teirID   integer NOT NULL REFERENCES Tier(id),
+    date     date    NOT NULL DEFAULT current_date,
+    tierID   integer NOT NULL REFERENCES Tier(id),
   PRIMARY KEY (id)
 );
 
@@ -149,7 +161,7 @@ CREATE TABLE PlaysIn (
     playerID INTEGER NOT NULL REFERENCES Player(personID),
     deckID   INTEGER NOT NULL REFERENCES Deck(id),
     side     integer NOT NULL,
-    result   text    NOT NULL,
+    result   CHAR(1) CHECK (result = 'W' or result = 'L'),
   PRIMARY KEY (matchID, playerID)
 );
 
@@ -157,9 +169,147 @@ CREATE TABLE PlaysIn (
 -- The table of banned people.
 --
 CREATE TABLE BannedPeople (
-  personID     INTEGER NOT NULL REFERENCES Person(id),
-  reason       text,
-  startDate    text    NOT NULL,
-  legth_months INTEGER NOT NULL,
+    personID     INTEGER NOT NULL REFERENCES Person(id),
+    reason       text,
+    startDate    date    NOT NULL DEFAULT current_date,
+    legth_months INTEGER NOT NULL,
   PRIMARY KEY (personID)
 );
+
+-- CREATE OR REPLACE FUNCTION check_deck_size()
+--   RETURNS TRIGGER AS
+-- $$
+-- DECLARE
+--   numCards INTEGER := 0;
+--   currentRecord RECORD;
+--
+-- BEGIN
+--   FOR currentRecord IN SELECT DeckList.instances FROM DeckList
+--     WHERE NEW.id = DeckList.id LOOP
+--       numCards := numCards + currentRecord.instances;
+--   END LOOP;
+--   IF numCards > 60 THEN
+--     RAISE NOTICE 'There are too many cards in that deck.';
+--     RETURN NULL;
+--   END IF;
+--   RETURN NEW;
+-- END;
+-- $$
+-- LANGUAGE plpgsql;
+--
+-- CREATE TRIGGER check_deck_size
+--   BEFORE INSERT OR UPDATE ON DeckList
+--   FOR EACH ROW
+--   EXECUTE PROCEDURE check_deck_size();
+
+
+--
+-- Trigger to make sure a person does not play in and also judge the same match
+--
+CREATE OR REPLACE FUNCTION check_match_judge()
+  RETURNS TRIGGER AS
+$$
+BEGIN
+  IF exists(SELECT *
+            FROM match
+            WHERE Match.id = NEW.matchID
+            AND match.judgeID = NEW.playerID) THEN
+    RAISE NOTICE 'Cannot judge and play in the same match';
+    RETURN NULL;
+  END IF;
+  RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER check_match_judge
+  BEFORE INSERT OR UPDATE ON PlaysIn
+  FOR EACH ROW
+  EXECUTE PROCEDURE check_match_judge();
+
+--
+-- Create view for full match info
+--
+CREATE VIEW fullMatchView AS
+SELECT match.id as match_id, PlaysIn.playerID as player_id, p1.fname as player_name, PlaysIn.side, judge.personID as judge_id, p2.fname as judge_name, result, gameType.name
+FROM Match INNER JOIN PlaysIn ON Match.id = PlaysIn.matchID
+           INNER JOIN Player ON PlaysIn.playerID = Player.personID
+           INNER JOIN Judge ON Match.judgeID = Judge.personID
+           INNER JOIN person as p1 ON Player.personID = p1.id
+           INNER JOIN person as p2 ON Judge.personID = p2.id
+           INNER JOIN gametype ON Match.gameType = GameType.id;
+
+
+
+--
+-- Create the rolls.
+--
+CREATE ROLE admin;
+CREATE ROLE tournamentAdmin;
+CREATE ROLE judge;
+CREATE ROLE player;
+
+--
+-- Remove access from all rolls before restoring it.
+--
+REVOKE ALL ON ALL TABLES IN SCHEMA public from admin;
+REVOKE ALL ON ALL TABLES IN SCHEMA public from tournamentAdmin;
+REVOKE ALL ON ALL TABLES IN SCHEMA public from judge;
+REVOKE ALL ON ALL TABLES IN SCHEMA public from player;
+
+--
+-- Give admin back power.
+--
+GRANT ALL ON ALL TABLES IN SCHEMA public to admin;
+
+--
+-- Rules for player roll
+--
+GRANT SELECT , INSERT , UPDATE , DELETE ON Deck to player;
+GRANT SELECT , INSERT , UPDATE , DELETE ON Decklist to player;
+GRANT UPDATE ON Person to player;
+GRANT UPDATE ON Player to player;
+GRANT SELECT ON Card TO player;
+GRANT SELECT ON Set TO player;
+GRANT SELECT ON Match TO player;
+GRANT SELECT ON PlaysIn TO player;
+GRANT SELECT ON Tournament TO player;
+GRANT SELECT ON GameType TO player;
+GRANT SELECT ON Tier TO player;
+
+--
+-- Rules for judge roll.
+--
+GRANT SELECT , INSERT , UPDATE ON BannedPeople to judge;
+GRANT SELECT , UPDATE ON Match to judge;
+GRANT SELECT , UPDATE ON PlaysIn to judge;
+GRANT SELECT , UPDATE ON Judge to judge;
+GRANT SELECT ON Deck TO judge;
+GRANT SELECT ON DeckList TO judge;
+GRANT SELECT ON Card TO judge;
+GRANT SELECT ON Set TO judge;
+GRANT SELECT ON Match TO judge;
+GRANT SELECT ON PlaysIn TO judge;
+GRANT SELECT ON Tournament TO judge;
+GRANT SELECT ON GameType TO judge;
+GRANT SELECT ON Tier TO judge;
+
+--
+-- Rules for tournamentAdmin roll.
+--
+GRANT SELECT , INSERT , UPDATE ON BannedPeople to tournamentAdmin;
+GRANT SELECT , INSERT , UPDATE ON Match to tournamentAdmin;
+GRANT SELECT , INSERT , UPDATE ON PlaysIn to tournamentAdmin;
+GRANT SELECT , INSERT , UPDATE ON Tournament to tournamentAdmin;
+GRANT SELECT , UPDATE ON Judge to tournamentAdmin;
+GRANT SELECT ON Deck TO tournamentAdmin;
+GRANT SELECT ON DeckList TO tournamentAdmin;
+GRANT SELECT ON Card TO tournamentAdmin;
+GRANT SELECT ON Set TO tournamentAdmin;
+GRANT SELECT ON Match TO tournamentAdmin;
+GRANT SELECT ON PlaysIn TO tournamentAdmin;
+GRANT SELECT ON Tournament TO tournamentAdmin;
+GRANT SELECT ON GameType TO tournamentAdmin;
+GRANT SELECT ON Tier TO tournamentAdmin;
+
+

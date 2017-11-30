@@ -1,16 +1,16 @@
 ----------------------------------------------------------------------------------------
--- Magic the Gathering
+-- Magic the Gathering:
 -- Organized Play
 -- by Anders Lykkehoy
 ----------------------------------------------------------------------------------------
-
-SELECT *
-FROM player INNER JOIN person ON player.personid = person.id
-            INNER JOIN card ON player.favcard = card.id;
-
-SELECT *
-FROM judge INNER JOIN person ON judge.personid = person.id
-           INNER JOIN judgelevel ON judge.level = judgelevel.level;
+--
+-- SELECT *
+-- FROM player INNER JOIN person ON player.personid = person.id
+--             INNER JOIN card ON player.favcard = card.id;
+--
+-- SELECT *
+-- FROM judge INNER JOIN person ON judge.personid = person.id
+--            INNER JOIN judgelevel ON judge.level = judgelevel.level;
 
 
 INSERT INTO set(name, year)
@@ -78,7 +78,14 @@ VALUES
   ('Anders', 'Lykkehoy', 5, 12, 1994),
   ('Richard', 'Garfield', 26, 6, 1963),
   ('Bob', 'Smith', 2, 3, 1990),
-  ('Some', 'Guy', 1, 1, 1991);
+  ('Some', 'Guy', 1, 1, 1991),
+  ('Morris', 'Norton', 3,7, 1980),
+  ('Mark', 'Watson', 15, 10, 1997),
+  ('Jeff', 'Fletcher', 22, 12, 2005);
+
+INSERT INTO bannedpeople (personid, reason, legth_months)
+VALUES
+  (6, 'cheating', 12);
 
 INSERT INTO judgelevel (level, name, yearsvalid)
 VALUES
@@ -88,12 +95,18 @@ VALUES
 
 INSERT INTO judge (personid, level, certyear)
 VALUES
-  (2, 3, 2017);
+  (2, 3, 2017),
+  (5, 3, 2017),
+  (1, 1, 2015);
 
 INSERT INTO player (personid, favcard)
 VALUES
   (1, 1),
-  (2, 1);
+  (2, 12),
+  (3, 12),
+  (4, 20),
+  (5, 35),
+  (7, 1);
 
 INSERT INTO gametype (name)
 VALUES
@@ -106,35 +119,56 @@ VALUES
 
 INSERT INTO tier (name, weight)
 VALUES
-  ('Best', 100);
+  ('Best', 100),
+  ('Grand Prix', 10),
+  ('Pro Tour', 5),
+  ('Prerelease', 3),
+  ('Friday Night Magic', 1);
 
-INSERT INTO tournament (name, location, teirid)
+INSERT INTO tournament (name, location, tierid)
 VALUES
-  ('Super amazing tournament of champions', 'the moon', 1);
+  ('Super amazing tournament of champions', 'the moon', 1),
+  ('FNM', 'Poughkeepsie, NY', 5),
+  ('Grand Prix Atlanta', 'Atlanta, GA', 2),
+  ('Grand Prix Warsaw', 'Warsaw, Germany', 2),
+  ('Iconic masters Prerelease', 'New York, NY', 4);
 
 INSERT INTO match (tournamentid, gametype, judgeid)
 VALUES
+  (1, 1, 2),
+  (1, 1, 2),
   (1, 1, 2);
 
+INSERT INTO deck (name)
+VALUES
+  ('Blue Control'),
+  ('Agro Red'),
+  ('Lil''bit of Everything');
 
+INSERT INTO decklist (id, cardid, instances)
+VALUES
+  (1, 1, 4),
+  (1, 5, 4),
+  (1, 2, 4),
+  (1, 3, 4),
+  (1, 4, 4),
+  (1, 6, 4),
+  (1, 7, 4),
+  (1, 8, 4),
+  (1, 9, 4),
+  (1, 10, 4),
+  (1, 11, 4),
+  (1, 12, 4),
+  (1, 13, 4),
+  (1, 14, 4),
+  (1, 15, 4);
 
--- --
--- -- An example stored procedure ("function")
--- --
--- create or replace function get_courses_by_credits(int, REFCURSOR) returns refcursor as
--- $$
--- declare
---    num_credits int       := $1;
---    resultset   REFCURSOR := $2;
--- begin
---    open resultset for
---       select num, name, credits
---       from   courses
---        where  credits >= num_credits;
---    return resultset;
--- end;
--- $$
--- language plpgsql;
---
--- select get_courses_by_credits(0, 'results');
--- Fetch all from results;
+-- INSERT INTO decklist (id, cardid, instances)
+-- VALUES (1, 16, 1);
+
+INSERT INTO playsin (matchid, playerid, deckid, side, result)
+VALUES
+  (1, 1, 1, 1, 'W'),
+  (1, 3, 1, 2, 'L'),
+  (2, 1, 1, 1, NULL),
+  (2, 4, 2, 2, NULL);
