@@ -3,14 +3,6 @@
 -- Organized Play
 -- by Anders Lykkehoy
 ----------------------------------------------------------------------------------------
---
--- SELECT *
--- FROM player INNER JOIN person ON player.personid = person.id
---             INNER JOIN card ON player.favcard = card.id;
---
--- SELECT *
--- FROM judge INNER JOIN person ON judge.personid = person.id
---            INNER JOIN judgelevel ON judge.level = judgelevel.level;
 
 
 INSERT INTO set(name, year)
@@ -81,7 +73,11 @@ VALUES
   ('Some', 'Guy', 1, 1, 1991),
   ('Morris', 'Norton', 3,7, 1980),
   ('Mark', 'Watson', 15, 10, 1997),
-  ('Jeff', 'Fletcher', 22, 12, 2005);
+  ('Jeff', 'Fletcher', 22, 12, 2005),
+  ('Bad', 'Guy', 22, 12, 2005);
+
+INSERT INTO bannedpeople (personid, reason, startdate, legth_months)
+VALUES (8, 'hes a bad guy', '2000-01-01', 6);
 
 INSERT INTO bannedpeople (personid, reason, legth_months)
 VALUES
@@ -161,10 +157,11 @@ VALUES
   (1, 12, 4),
   (1, 13, 4),
   (1, 14, 4),
-  (1, 15, 4);
+  (1, 15, 4),
+  (2, 15, 4);
 
--- INSERT INTO decklist (id, cardid, instances)
--- VALUES (1, 16, 1);
+INSERT INTO decklist (id, cardid, instances)
+VALUES (1, 17, 2);
 
 INSERT INTO playsin (matchid, playerid, deckid, side, result)
 VALUES

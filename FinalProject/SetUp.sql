@@ -4,6 +4,11 @@
 -- by Anders Lykkehoy
 ----------------------------------------------------------------------------------------
 
+
+-- drop all views
+DROP VIEW IF EXISTS fullMatchView;
+DROP VIEW IF EXISTS bannedPeopleInfo;
+
 -- drop all tables
 DROP TABLE IF EXISTS PlaysIn;
 DROP TABLE IF EXISTS Match;
@@ -19,10 +24,6 @@ DROP TABLE IF EXISTS DeckList;
 DROP TABLE IF EXISTS Deck;
 DROP TABLE IF EXISTS Card;
 DROP TABLE IF EXISTS Set;
-
--- drop all views
-DROP VIEW IF EXISTS fullMatchView;
-DROP VIEW IF EXISTS bannedPeopleInfo;
 
 -- drop all rolls
 DROP ROLE IF EXISTS admin;
@@ -54,7 +55,7 @@ CREATE TABLE Card (
 -- The table of Decks.
 --
 CREATE TABLE Deck (
-    id SERIAL,
+    id   SERIAL,
     name text,
   PRIMARY KEY (id)
 );
@@ -139,7 +140,6 @@ CREATE TABLE Judge (
 CREATE TABLE Player (
     personID INTEGER NOT NULL REFERENCES Person(id),
     favCard  INTEGER NOT NULL REFERENCES Card(id),
-    points   INTEGER NOT NULL DEFAULT 0,
   PRIMARY KEY (personID)
 );
 
@@ -182,7 +182,9 @@ CREATE TABLE BannedPeople (
 -- Create view for full match info
 --
 CREATE VIEW fullMatchView AS
-SELECT match.id as match_id, PlaysIn.playerID as player_id, p1.fname as player_name, PlaysIn.side, judge.personID as judge_id, p2.fname as judge_name, result, gameType.name
+SELECT match.id as match_id, PlaysIn.playerID as player_id,
+       p1.fname as player_name, PlaysIn.side, judge.personID as judge_id,
+       p2.fname as judge_name, result, gameType.name
 FROM Match INNER JOIN PlaysIn ON Match.id = PlaysIn.matchID
            INNER JOIN Player ON PlaysIn.playerID = Player.personID
            INNER JOIN Judge ON Match.judgeID = Judge.personID
@@ -197,34 +199,30 @@ CREATE VIEW bannedPeopleInfo AS
 SELECT personID, fname, lname, startDate, legth_months
 FROM BannedPeople INNER JOIN person ON BannedPeople.personID = Person.id;
 
-
-
--- CREATE OR REPLACE FUNCTION check_deck_size()
---   RETURNS TRIGGER AS
--- $$
--- DECLARE
---   numCards INTEGER := 0;
---   currentRecord RECORD;
 --
--- BEGIN
---   FOR currentRecord IN SELECT DeckList.instances FROM DeckList
---     WHERE NEW.id = DeckList.id LOOP
---       numCards := numCards + currentRecord.instances;
---   END LOOP;
---   IF numCards > 60 THEN
---     RAISE NOTICE 'There are too many cards in that deck.';
---     RETURN NULL;
---   END IF;
---   RETURN NEW;
--- END;
--- $$
--- LANGUAGE plpgsql;
+-- Create trigger to check deck size before inserting another card into a decklist
 --
--- CREATE TRIGGER check_deck_size
---   BEFORE INSERT OR UPDATE ON DeckList
---   FOR EACH ROW
---   EXECUTE PROCEDURE check_deck_size();
+CREATE OR REPLACE FUNCTION check_deck_size()
+  RETURNS TRIGGER AS
+$$
+DECLARE
+  numCards INTEGER := 0;
+BEGIN
+  SELECT INTO numCards sum(instances) FROM DeckList WHERE NEW.id = DeckList.id;
 
+  IF numCards + NEW.instances > 60 THEN
+    RAISE NOTICE 'There are too many cards in that deck.';
+    RETURN NULL;
+  END IF;
+  RETURN NEW;
+END;
+$$
+LANGUAGE plpgsql;
+
+CREATE TRIGGER check_deck_size
+  BEFORE INSERT OR UPDATE ON DeckList
+  FOR EACH ROW
+  EXECUTE PROCEDURE check_deck_size();
 
 --
 -- Trigger to make sure a person does not play in and also judge the same match
@@ -250,8 +248,43 @@ CREATE TRIGGER check_match_judge
   FOR EACH ROW
   EXECUTE PROCEDURE check_match_judge();
 
+--
+-- function to get all distinct matches given a tournament
+--
+CREATE OR REPLACE FUNCTION get_matches_by_tournament(text) RETURNS
+  TABLE (matchID INTEGER) AS
+$$
+DECLARE
+  tournamentName ALIAS FOR $1;
+BEGIN
+  RETURN QUERY
+    SELECT DISTINCT Match.id
+    FROM Match INNER JOIN tournament ON Match.tournamentID = Tournament.id
+    WHERE tournament.name = tournamentName;
+END;
+$$LANGUAGE plpgsql;
 
-
+--
+-- calculate the points give a players first and last name
+--
+CREATE OR REPLACE FUNCTION get_points_for_player(text, text) RETURNS
+  TABLE (points BIGINT) AS
+$$
+DECLARE
+  firstName ALIAS FOR $1;
+  lastName ALIAS FOR $2;
+BEGIN
+  RETURN QUERY
+    SELECT coalesce(sum(tier.weight), 0)
+    FROM PlaysIn INNER JOIN Person ON playerID = id
+                 INNER JOIN match ON PlaysIn.matchID = Match.id
+                 INNER JOIN tournament ON Match.tournamentID = Tournament.id
+                 INNER JOIN tier ON Tournament.tierID = Tier.id
+    WHERE fname = firstName
+    AND lname = lastName
+    AND result = 'W';
+END;
+$$LANGUAGE plpgsql;
 
 --
 -- Create the rolls.
@@ -323,5 +356,3 @@ GRANT SELECT ON PlaysIn TO tournamentAdmin;
 GRANT SELECT ON Tournament TO tournamentAdmin;
 GRANT SELECT ON GameType TO tournamentAdmin;
 GRANT SELECT ON Tier TO tournamentAdmin;
-
-
